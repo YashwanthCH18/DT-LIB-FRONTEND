@@ -74,8 +74,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     }
                 } catch (error) {
                     console.error("Failed to sync Google login with backend:", error)
-                    // If backend doesn't have this user yet, we might need to handle registration?
-                    // For now, assume user exists or backend creates them via webhook/trigger logic if mostly relying on Supabase
+                    // If validation fails, we must clear the Supabase session to prevent a loop
+                    // otherwise Supabase thinks we are logged in -> fires SIGNED_IN -> we retry validate -> fail -> loop
+                    await supabase.auth.signOut()
+                    localStorage.removeItem('access_token')
+                    localStorage.removeItem('user_role')
+                    localStorage.removeItem('user_name')
+                    setUser(null)
+                    setLoading(false)
                 } finally {
                     setLoading(false)
                 }

@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { api } from '@/lib/api'
+import { supabase } from '@/lib/supabase'
 
 interface User {
     user_id: string
@@ -36,8 +37,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const router = useRouter()
 
     useEffect(() => {
-        // Check if user is already logged in
+        // 1. Check existing legacy token
         checkAuth()
+
+        // 2. Listen for Supabase Auth changes (Google Login)
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            console.log("Supabase Auth Event:", event)
+
+            if (event === 'SIGNED_IN' && session) {
+                setLoading(true)
+                try {
+                    // Sync Supabase Token with our API Client
+                    localStorage.setItem('access_token', session.access_token)
+
+                    // Validate with backend to get Role & DB Profile
+                    // The backend /auth/validate endpoint uses the token to find the user in DB
+                    const response = await api.validate()
+
+                    setUser({
+                        user_id: response.user_id,
+                        email: response.email,
+                        name: response.name,
+                        role: response.role,
+                    })
+
+                    localStorage.setItem('user_role', response.role)
+                    localStorage.setItem('user_name', response.name)
+
+                    // Redirect based on role if on login page
+                    if (window.location.pathname === '/login' || window.location.pathname === '/signup') {
+                        if (response.role === 'admin') {
+                            router.push('/admin/dashboard')
+                        } else {
+                            router.push('/student/dashboard')
+                        }
+                    }
+                } catch (error) {
+                    console.error("Failed to sync Google login with backend:", error)
+                    // If backend doesn't have this user yet, we might need to handle registration?
+                    // For now, assume user exists or backend creates them via webhook/trigger logic if mostly relying on Supabase
+                } finally {
+                    setLoading(false)
+                }
+            } else if (event === 'SIGNED_OUT') {
+                setUser(null)
+                localStorage.removeItem('access_token')
+                localStorage.removeItem('user_role')
+                localStorage.removeItem('user_name')
+                router.push('/login')
+            }
+        })
+
+        return () => {
+            subscription.unsubscribe()
+        }
     }, [])
 
     const checkAuth = async () => {
@@ -70,13 +123,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
             const response = await api.login(email, password)
 
-            // Verify role matches expectation (if provided)
             if (expectedRole && response.role !== expectedRole) {
-                // If roles don't match, we shouldn't store the token
                 throw new Error(`Access denied: You are not authorized to login as a ${expectedRole}`)
             }
 
-            // Store token and user info
             localStorage.setItem('access_token', response.access_token)
             localStorage.setItem('user_role', response.role)
             localStorage.setItem('user_name', response.name)
@@ -88,7 +138,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 role: response.role,
             })
 
-            // Redirect based on role
             if (response.role === 'admin') {
                 router.push('/admin/dashboard')
             } else {
@@ -108,13 +157,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }) => {
         try {
             await api.signup(data)
-            // No auto-login, let the user log in manually
         } catch (error: any) {
             throw new Error(error.message || 'Signup failed')
         }
     }
 
-    const logout = () => {
+    const logout = async () => {
+        await supabase.auth.signOut()
         localStorage.removeItem('access_token')
         localStorage.removeItem('user_role')
         localStorage.removeItem('user_name')

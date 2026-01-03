@@ -72,7 +72,7 @@ export default function AdminDashboard() {
 
           {/* Charts */}
           <div className="grid gap-6 md:grid-cols-2">
-            <Card>
+            <Card className="min-w-0">
               <CardHeader>
                 <CardTitle>Daily Borrow Trends</CardTitle>
                 <CardDescription>Books borrowed in the past week</CardDescription>
@@ -100,7 +100,7 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="min-w-0">
               <CardHeader>
                 <CardTitle>Overdue Trends</CardTitle>
                 <CardDescription>Overdue books over the past 6 months</CardDescription>

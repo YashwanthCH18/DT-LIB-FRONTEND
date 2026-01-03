@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { BookOpen, User } from "lucide-react"
+import { BookOpen, User, Menu } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
 
 export function AdminNav() {
@@ -30,8 +30,29 @@ export function AdminNav() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-2">
+          {/* Mobile Menu */}
+          <div className="md:hidden">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-6 w-6" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-[200px]">
+                {navItems.map((item) => (
+                  <DropdownMenuItem key={item.href} asChild>
+                    <Link href={item.href} className="w-full">
+                      {item.label}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
           <BookOpen className="h-6 w-6 text-primary" />
-          <span className="font-semibold text-lg">Smart Library Admin</span>
+          <span className="font-semibold text-lg hidden sm:inline-block">Smart Library Admin</span>
+          <span className="font-semibold text-lg sm:hidden">Admin</span>
         </div>
 
         <nav className="hidden md:flex items-center gap-1">

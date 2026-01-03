@@ -101,7 +101,9 @@ export default function SignupPage() {
         // Zod Validation
         const validationResult = signupSchema.safeParse(formData)
         if (!validationResult.success) {
-            setError(validationResult.error.errors[0].message)
+            // Collect all error messages
+            const errorMessages = validationResult.error.errors.map(err => err.message).join(" • ")
+            setError(errorMessages)
             setIsLoading(false)
             return
         }

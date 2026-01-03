@@ -1,0 +1,216 @@
+"use client"
+
+import type React from "react"
+
+import { useState } from "react"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { BookOpen, AlertCircle } from "lucide-react"
+import { useAuth } from "@/contexts/AuthContext"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
+export default function SignupPage() {
+    const { signup } = useAuth()
+
+    const [formData, setFormData] = useState({
+        email: "",
+        password: "",
+        confirmPassword: "",
+        name: "",
+        role: "student",
+        student_id: "",
+    })
+    const [isLoading, setIsLoading] = useState(false)
+    const [error, setError] = useState("")
+
+    const [isSuccess, setIsSuccess] = useState(false)
+
+    const handleChange = (field: string, value: string) => {
+        setFormData(prev => ({ ...prev, [field]: value }))
+    }
+
+    const handleSignup = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setIsLoading(true)
+        setError("")
+
+        // Validation
+        if (formData.password !== formData.confirmPassword) {
+            setError("Passwords do not match")
+            setIsLoading(false)
+            return
+        }
+
+        if (formData.password.length < 6) {
+            setError("Password must be at least 6 characters")
+            setIsLoading(false)
+            return
+        }
+
+        try {
+            await signup({
+                email: formData.email,
+                password: formData.password,
+                role: formData.role,
+                name: formData.name,
+                student_id: formData.role === "student" ? formData.student_id : undefined,
+            })
+            setIsSuccess(true)
+        } catch (err: any) {
+            setError(err.message || "Signup failed. Please try again.")
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    if (isSuccess) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center bg-muted/30 p-4">
+                <Card className="w-full max-w-md">
+                    <CardHeader>
+                        <CardTitle className="text-xl text-green-600 flex items-center gap-2">
+                            <AlertCircle className="h-6 w-6" />
+                            Signup Successful
+                        </CardTitle>
+                        <CardDescription>
+                            You have successfully signed up! Please login with your new credentials.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Button asChild className="w-full">
+                            <Link href={`/login?role=${formData.role}`}>Go to Login</Link>
+                        </Button>
+                    </CardContent>
+                </Card>
+            </div>
+        )
+    }
+
+    return (
+        <div className="min-h-screen flex flex-col items-center justify-center bg-muted/30 p-4">
+            <div className="w-full max-w-md space-y-6">
+                {/* Logo */}
+                <Link href="/" className="flex items-center justify-center gap-2">
+                    <BookOpen className="h-8 w-8 text-primary" />
+                    <span className="font-semibold text-xl">Smart Library</span>
+                </Link>
+
+                {/* Signup Card */}
+                <Card>
+                    <CardHeader className="space-y-1">
+                        <CardTitle className="text-2xl">Create an account</CardTitle>
+                        <CardDescription>Enter your information to get started</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {error && (
+                            <Alert variant="destructive" className="mb-4">
+                                <AlertCircle className="h-4 w-4" />
+                                <AlertDescription>{error}</AlertDescription>
+                            </Alert>
+                        )}
+                        <form onSubmit={handleSignup} className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="name">Full Name</Label>
+                                <Input
+                                    id="name"
+                                    type="text"
+                                    placeholder="John Doe"
+                                    value={formData.name}
+                                    onChange={(e) => handleChange("name", e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="email">Email</Label>
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    placeholder="name@example.com"
+                                    value={formData.email}
+                                    onChange={(e) => handleChange("email", e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="role">Role</Label>
+                                <Select
+                                    value={formData.role}
+                                    onValueChange={(value) => handleChange("role", value)}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select your role" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="student">Student</SelectItem>
+                                        <SelectItem value="admin">Admin</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {formData.role === "student" && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="student_id">Student ID</Label>
+                                    <Input
+                                        id="student_id"
+                                        type="text"
+                                        placeholder="STU2024001"
+                                        value={formData.student_id}
+                                        onChange={(e) => handleChange("student_id", e.target.value)}
+                                    />
+                                </div>
+                            )}
+
+                            <div className="space-y-2">
+                                <Label htmlFor="password">Password</Label>
+                                <Input
+                                    id="password"
+                                    type="password"
+                                    placeholder="At least 6 characters"
+                                    value={formData.password}
+                                    onChange={(e) => handleChange("password", e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                                <Input
+                                    id="confirmPassword"
+                                    type="password"
+                                    placeholder="Re-enter your password"
+                                    value={formData.confirmPassword}
+                                    onChange={(e) => handleChange("confirmPassword", e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            <Button type="submit" className="w-full" disabled={isLoading}>
+                                {isLoading ? "Creating account..." : "Sign up"}
+                            </Button>
+                        </form>
+                        <div className="mt-4 text-center text-sm">
+                            <p className="text-muted-foreground">
+                                Already have an account?{" "}
+                                <Link href="/login" className="text-primary hover:underline">
+                                    Sign in
+                                </Link>
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <div className="text-center">
+                    <Link href="/" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                        Back to home
+                    </Link>
+                </div>
+            </div>
+        </div>
+    )
+}

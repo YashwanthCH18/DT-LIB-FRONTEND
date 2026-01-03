@@ -1,103 +1,176 @@
-import Image from "next/image";
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { BookOpen, Bell, BarChart3, Zap, Scan, Clock, TrendingUp } from "lucide-react"
 
-export default function Home() {
+export default function LandingPage() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="min-h-screen flex flex-col">
+      {/* Header */}
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto flex h-16 items-center justify-between px-4">
+          <div className="flex items-center gap-2">
+            <BookOpen className="h-6 w-6 text-primary" />
+            <span className="font-semibold text-lg">Smart Library</span>
+          </div>
+          <nav className="hidden md:flex items-center gap-6">
+            <Link href="#home" className="text-sm font-medium hover:text-primary transition-colors">
+              Home
+            </Link>
+            <Link href="#about" className="text-sm font-medium hover:text-primary transition-colors">
+              About System
+            </Link>
+            <Link href="#features" className="text-sm font-medium hover:text-primary transition-colors">
+              Features
+            </Link>
+            <Link href="/login">
+              <Button>Login</Button>
+            </Link>
+          </nav>
+          <Link href="/login" className="md:hidden">
+            <Button size="sm">Login</Button>
+          </Link>
         </div>
+      </header>
+
+      <main className="flex-1">
+        {/* Hero Section */}
+        <section id="home" className="container mx-auto px-4 py-20 md:py-32">
+          <div className="max-w-3xl mx-auto text-center space-y-6">
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-balance">
+              Smart Library Management System
+            </h1>
+            <p className="text-xl text-muted-foreground leading-relaxed text-pretty">
+              Experience seamless library management with RFID-based borrowing, automated reminders, and real-time book
+              availability tracking.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+              <Link href="/login?role=student">
+                <Button size="lg" className="w-full sm:w-auto">
+                  Student Login
+                </Button>
+              </Link>
+              <Link href="/login?role=admin">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto bg-transparent">
+                  Admin Login
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* System Overview Section */}
+        <section id="about" className="bg-muted/50 py-20">
+          <div className="container mx-auto px-4">
+            <div className="max-w-3xl mx-auto text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">System Overview</h2>
+              <p className="text-muted-foreground text-lg">
+                Revolutionizing library operations with cutting-edge technology
+              </p>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+              <Card>
+                <CardHeader>
+                  <Zap className="h-8 w-8 text-primary mb-2" />
+                  <CardTitle>Automated Borrow & Return</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription>
+                    RFID technology enables instant book scanning and automatic transaction logging
+                  </CardDescription>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <Bell className="h-8 w-8 text-accent mb-2" />
+                  <CardTitle>Due Date Reminders</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription>
+                    Smart notifications keep students informed about due dates and overdue books
+                  </CardDescription>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <Clock className="h-8 w-8 text-chart-3 mb-2" />
+                  <CardTitle>Real-Time Availability</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription>
+                    Check book availability instantly and get notified when books become available
+                  </CardDescription>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <BarChart3 className="h-8 w-8 text-chart-4 mb-2" />
+                  <CardTitle>Analytics for Admins</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription>
+                    Comprehensive insights into borrowing patterns, overdue trends, and more
+                  </CardDescription>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </section>
+
+        {/* How It Works Section */}
+        <section id="features" className="py-20">
+          <div className="container mx-auto px-4">
+            <div className="max-w-3xl mx-auto text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">How It Works</h2>
+              <p className="text-muted-foreground text-lg">Simple, efficient, and fully automated</p>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
+              <div className="flex flex-col items-center text-center space-y-3">
+                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Scan className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="font-semibold text-lg">1. Scan Book</h3>
+                <p className="text-sm text-muted-foreground">
+                  Use RFID scanner to instantly identify and process books
+                </p>
+              </div>
+              <div className="flex flex-col items-center text-center space-y-3">
+                <div className="h-16 w-16 rounded-full bg-accent/10 flex items-center justify-center">
+                  <BookOpen className="h-8 w-8 text-accent" />
+                </div>
+                <h3 className="font-semibold text-lg">2. System Logs Borrow</h3>
+                <p className="text-sm text-muted-foreground">
+                  Automatic transaction recording with due date calculation
+                </p>
+              </div>
+              <div className="flex flex-col items-center text-center space-y-3">
+                <div className="h-16 w-16 rounded-full bg-chart-3/10 flex items-center justify-center">
+                  <Bell className="h-8 w-8 text-chart-3" />
+                </div>
+                <h3 className="font-semibold text-lg">3. Student Gets Reminder</h3>
+                <p className="text-sm text-muted-foreground">Timely notifications before and after due dates</p>
+              </div>
+              <div className="flex flex-col items-center text-center space-y-3">
+                <div className="h-16 w-16 rounded-full bg-chart-4/10 flex items-center justify-center">
+                  <TrendingUp className="h-8 w-8 text-chart-4" />
+                </div>
+                <h3 className="font-semibold text-lg">4. Admin Monitors Analytics</h3>
+                <p className="text-sm text-muted-foreground">Real-time insights and comprehensive reporting</p>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+
+      {/* Footer */}
+      <footer className="border-t py-8">
+        <div className="container mx-auto px-4">
+          <div className="text-center space-y-2">
+            <p className="text-sm text-muted-foreground">Smart Library Management System - Final Year Project</p>
+            <p className="text-xs text-muted-foreground">Built with Next.js and shadcn/ui</p>
+          </div>
+        </div>
       </footer>
     </div>
-  );
+  )
 }

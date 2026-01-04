@@ -9,17 +9,33 @@ import { User, Mail, BookOpen, AlertTriangle, DollarSign } from "lucide-react"
 import { api } from "@/lib/api"
 import { useParams } from "next/navigation"
 
+// Simple in-memory cache to prevent refetching on every navigation
+const studentCache: Record<string, any> = {}
+
 export default function StudentDetailPage() {
   const params = useParams()
+  const studentId = params.id as string
   const [studentData, setStudentData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchDetails = async () => {
-      if (!params.id) return
+      if (!studentId) return
+
+      // Check cache first
+      if (studentCache[studentId]) {
+        setStudentData(studentCache[studentId])
+        setLoading(false)
+        // Optional: re-validate in background? User said "only when I refresh".
+        // So we strictly use cache if available.
+        return
+      }
+
       try {
-        const response = await api.getStudentDetails(params.id as string)
+        setLoading(true)
+        const response = await api.getStudentDetails(studentId)
         setStudentData(response)
+        studentCache[studentId] = response // Set cache
       } catch (error) {
         console.error("Failed to fetch student details:", error)
       } finally {
@@ -27,7 +43,22 @@ export default function StudentDetailPage() {
       }
     }
     fetchDetails()
-  }, [params.id])
+  }, [studentId])
+
+  // Explicit refresh function for the User to click if they want new data
+  const refreshData = async () => {
+    if (!studentId) return
+    setLoading(true)
+    try {
+      const response = await api.getStudentDetails(studentId)
+      setStudentData(response)
+      studentCache[studentId] = response
+    } catch (error) {
+      console.error("Refresh failed:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   if (loading) return <div>Loading...</div>
   if (!studentData) return <div>Student not found</div>
@@ -35,19 +66,62 @@ export default function StudentDetailPage() {
   const { student, active_borrows, history } = studentData
   const activeCount = active_borrows?.length || 0
   const overdueCount = active_borrows?.filter((b: any) => new Date(b.due_date) < new Date()).length || 0
-  // Calculate total fines if not provided directly
-  const totalFines = 0 // Placeholder as API doesn't explicitly return total_fine in this endpoint based on docs, or maybe it does in 'student' object? I'll assume 0 or check if 'fines' is in response later.
+  const totalFines = 0
 
   const borrowHistory = history || []
+
+  const handleReturnBook = async (loan: any) => {
+    if (!confirm("Mark this book as returned? Fines will be generated if overdue.")) return;
+
+    // Optimistic Update
+    const originalData = { ...studentData }
+
+    // 1. Move from active to history
+    const now = new Date().toISOString()
+    const updatedActive = active_borrows.filter((b: any) => b.id !== loan.id)
+    const updatedHistory = [
+      { ...loan, status: 'returned', return_date: now },
+      ...borrowHistory
+    ]
+
+    // Update State Immediately
+    const optimisticData = {
+      ...studentData,
+      active_borrows: updatedActive,
+      history: updatedHistory
+    }
+    setStudentData(optimisticData)
+    studentCache[studentId] = optimisticData // Update cache
+
+    try {
+      const res = await api.returnBook(loan.id)
+      alert(res.message + (res.fine_generated ? ` Fine: ₹${res.fine_amount}` : ""))
+      // No reload needed, state is already correct
+    } catch (e: any) {
+      console.error(e)
+      alert("Failed to return book: " + (e.message || "Unknown error"))
+      // Revert on error
+      setStudentData(originalData)
+      studentCache[studentId] = originalData
+    }
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
       <AdminNav />
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="max-w-5xl mx-auto space-y-6">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Student Details</h1>
-            <p className="text-muted-foreground mt-1">Complete student library profile</p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Student Details</h1>
+              <p className="text-muted-foreground mt-1">Complete student library profile</p>
+            </div>
+            <button
+              onClick={refreshData}
+              className="text-sm border rounded px-3 py-1 hover:bg-muted"
+            >
+              Refresh Data
+            </button>
           </div>
 
           {/* Student Info Card */}
@@ -152,20 +226,7 @@ export default function StudentDetailPage() {
                         <TableCell>
                           <button
                             className="text-sm text-primary hover:underline"
-                            onClick={async () => {
-                              if (!confirm("Mark this book as returned? Fines will be generated if overdue.")) return;
-                              try {
-                                setLoading(true)
-                                const res = await api.returnBook(loan.id)
-                                alert(res.message + (res.fine_generated ? ` Fine: ₹${res.fine_amount}` : ""))
-                                // Refresh logic - crude reload for now or re-fetch
-                                window.location.reload()
-                              } catch (e: any) {
-                                console.error(e)
-                                alert("Failed to return book: " + (e.message || "Unknown error"))
-                                setLoading(false)
-                              }
-                            }}
+                            onClick={() => handleReturnBook(loan)}
                           >
                             Return Book
                           </button>

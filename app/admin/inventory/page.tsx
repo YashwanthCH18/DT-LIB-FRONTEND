@@ -162,7 +162,7 @@ export default function InventoryPage() {
       const sortStr = `${sortConfig.key}_${sortConfig.direction}`
 
       const response = await api.fetchAllBooks(
-        token, // Uses token from useAuth() at line 32
+        token || "", // Uses token from useAuth() at line 32
         searchQuery,
         availability,
         undefined, // category

@@ -209,10 +209,7 @@ export default function NotificationControlPage() {
                         type="button"
                         onClick={handleBroadcast}
                         disabled={loading || !title.trim() || !message.trim()}
-                        className={`flex-1 text-white transition-all duration-200 ${title.trim() && message.trim()
-                            ? "bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg"
-                            : "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
-                          }`}
+                        className="flex-1 bg-primary text-white hover:bg-primary/90 shadow-sm hover:shadow-md disabled:bg-muted disabled:text-muted-foreground disabled:opacity-50 disabled:shadow-none transition-all duration-200"
                       >
                         <Send className="mr-2 h-4 w-4" />
                         {loading ? "Sending..." : "Send Now"}

@@ -205,7 +205,15 @@ export default function NotificationControlPage() {
                           <SelectItem value="active">Active Loans</SelectItem>
                         </SelectContent>
                       </Select>
-                      <Button type="button" onClick={handleBroadcast} disabled={loading} className="flex-1 bg-accent hover:bg-accent/90 text-white">
+                      <Button
+                        type="button"
+                        onClick={handleBroadcast}
+                        disabled={loading || !title.trim() || !message.trim()}
+                        className={`flex-1 text-white transition-all duration-200 ${title.trim() && message.trim()
+                            ? "bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg"
+                            : "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
+                          }`}
+                      >
                         <Send className="mr-2 h-4 w-4" />
                         {loading ? "Sending..." : "Send Now"}
                       </Button>

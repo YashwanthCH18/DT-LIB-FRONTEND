@@ -8,8 +8,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Bell, Send, Settings, Trash2 } from "lucide-react"
+import { Bell, Send, Settings, Trash2, Megaphone, Clock } from "lucide-react"
 import { api } from "@/lib/api"
+import { motion, AnimatePresence } from "framer-motion"
 
 export default function NotificationControlPage() {
   const [reminderTiming, setReminderTiming] = useState("2")
@@ -20,7 +21,6 @@ export default function NotificationControlPage() {
   const [loading, setLoading] = useState(false)
   const [configLoading, setConfigLoading] = useState(false)
   const [announcements, setAnnouncements] = useState<any[]>([])
-
   const [historyLoading, setHistoryLoading] = useState(true)
 
   const fetchAnnouncements = async () => {
@@ -31,15 +31,11 @@ export default function NotificationControlPage() {
       }
     } catch (err: any) {
       console.error("Failed to fetch announcements", err)
-      if (err.message === "Not authenticated" || err.message.includes("401")) {
-        // Handled by global event now, but good to keep
-      }
     } finally {
       setHistoryLoading(false)
     }
   }
 
-  // Fetch on mount
   useEffect(() => {
     fetchAnnouncements()
   }, [])
@@ -54,12 +50,12 @@ export default function NotificationControlPage() {
       await api.broadcastNotification({
         title,
         message,
-        type: "announcement" // or based on logic
+        type: "announcement"
       })
       alert("Announcement sent successfully!")
       setTitle("")
       setMessage("")
-      fetchAnnouncements() // Refresh list
+      fetchAnnouncements()
     } catch (error) {
       console.error("Broadcast failed", error)
       alert("Failed to send announcement")
@@ -85,169 +81,212 @@ export default function NotificationControlPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background/50">
       <AdminNav />
       <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="max-w-3xl mx-auto space-y-6">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Notification Control</h1>
-            <p className="text-muted-foreground mt-1">Configure reminders and send announcements</p>
+        <div className="max-w-4xl mx-auto space-y-6">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex items-center gap-3 mb-6"
+          >
+            <div className="h-12 w-12 rounded-xl bg-primary/20 flex items-center justify-center">
+              <Bell className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent w-fit">Notification Control</h1>
+              <p className="text-muted-foreground mt-1">Configure automated reminders and broadcast announcements</p>
+            </div>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Reminder Settings */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <Card className="glass border-white/10 shadow-lg h-full">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-secondary/50 flex items-center justify-center">
+                      <Settings className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <CardTitle>Automation Rules</CardTitle>
+                      <CardDescription>Configure system triggers</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-3">
+                    <Label htmlFor="reminder-days">Due Date Warning</Label>
+                    <Select value={reminderTiming} onValueChange={setReminderTiming}>
+                      <SelectTrigger id="reminder-days" className="bg-secondary/50 border-white/10">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1 day before due</SelectItem>
+                        <SelectItem value="2">2 days before due</SelectItem>
+                        <SelectItem value="3">3 days before due</SelectItem>
+                        <SelectItem value="5">5 days before due</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-3">
+                    <Label htmlFor="overdue-frequency">Overdue Frequency</Label>
+                    <Select value={overdueFrequency} onValueChange={setOverdueFrequency}>
+                      <SelectTrigger id="overdue-frequency" className="bg-secondary/50 border-white/10">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="daily">Daily Reminder</SelectItem>
+                        <SelectItem value="every-2-days">Every 2 Days</SelectItem>
+                        <SelectItem value="weekly">Weekly Summary</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button onClick={handleSaveConfig} disabled={configLoading} className="w-full mt-4">
+                    {configLoading ? "Saving..." : "Save Configuration"}
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Broadcast Announcement */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <Card className="glass border-white/10 shadow-lg h-full">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-secondary/50 flex items-center justify-center">
+                      <Megaphone className="h-5 w-5 text-accent" />
+                    </div>
+                    <div>
+                      <CardTitle>Broadcast</CardTitle>
+                      <CardDescription>Send alerts to all students</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <form className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="announcement-title">Subject</Label>
+                      <Input
+                        id="announcement-title"
+                        placeholder="e.g., Library Holiday Closure"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        className="bg-secondary/50 border-white/10"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="announcement-message">Message</Label>
+                      <Textarea
+                        id="announcement-message"
+                        placeholder="Enter announcement details..."
+                        rows={4}
+                        className="resize-none bg-secondary/50 border-white/10"
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Select value={recipients} onValueChange={setRecipients}>
+                        <SelectTrigger id="recipient" className="w-[140px] bg-secondary/50 border-white/10">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Everyone</SelectItem>
+                          <SelectItem value="overdue">Overdue Only</SelectItem>
+                          <SelectItem value="active">Active Loans</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button type="button" onClick={handleBroadcast} disabled={loading} className="flex-1 bg-accent hover:bg-accent/90 text-white">
+                        <Send className="mr-2 h-4 w-4" />
+                        {loading ? "Sending..." : "Send Now"}
+                      </Button>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            </motion.div>
           </div>
 
-          {/* Reminder Settings */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Settings className="h-5 w-5 text-primary" />
-                <div>
-                  <CardTitle>Reminder Configuration</CardTitle>
-                  <CardDescription>Set up automated due date reminder timing</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="reminder-days">Send reminder before due date (days)</Label>
-                <Select value={reminderTiming} onValueChange={setReminderTiming}>
-                  <SelectTrigger id="reminder-days">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1 day before</SelectItem>
-                    <SelectItem value="2">2 days before</SelectItem>
-                    <SelectItem value="3">3 days before</SelectItem>
-                    <SelectItem value="5">5 days before</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="overdue-frequency">Overdue reminder frequency</Label>
-                <Select value={overdueFrequency} onValueChange={setOverdueFrequency}>
-                  <SelectTrigger id="overdue-frequency">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="daily">Daily</SelectItem>
-                    <SelectItem value="every-2-days">Every 2 days</SelectItem>
-                    <SelectItem value="weekly">Weekly</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button onClick={handleSaveConfig} disabled={configLoading}>
-                {configLoading ? "Saving..." : "Save Settings"}
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Broadcast Announcement */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Bell className="h-5 w-5 text-accent" />
-                <div>
-                  <CardTitle>Broadcast Announcement</CardTitle>
-                  <CardDescription>Send notifications to all students</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <form className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="announcement-title">Announcement Title</Label>
-                  <Input
-                    id="announcement-title"
-                    placeholder="e.g., Library Maintenance Notice"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="announcement-message">Message</Label>
-                  <Textarea
-                    id="announcement-message"
-                    placeholder="Enter your announcement message..."
-                    rows={4}
-                    className="resize-none"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="recipient">Recipients</Label>
-                  <Select value={recipients} onValueChange={setRecipients}>
-                    <SelectTrigger id="recipient">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Students</SelectItem>
-                      <SelectItem value="overdue">Students with Overdue Books</SelectItem>
-                      <SelectItem value="active">Students with Active Borrows</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button type="button" onClick={handleBroadcast} disabled={loading}>
-                  <Send className="mr-2 h-4 w-4" />
-                  {loading ? "Sending..." : "Send Announcement"}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-
           {/* Recent Announcements */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Announcements</CardTitle>
-              <CardDescription>Previously sent notifications</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {historyLoading ? (
-                  <div className="flex justify-center py-4">
-                    <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
-                  </div>
-                ) : announcements.length > 0 ? (
-                  announcements.map((ann: any) => (
-                    <div key={ann.id} className="border-b pb-4 last:border-0 last:pb-0 group">
-                      <div className="flex items-start justify-between gap-2 mb-1">
-                        <div className="flex-1">
-                          <h3 className="font-semibold">{ann.title || ann.message?.split(':')[0] || "No Title"}</h3>
-                          <span className="text-xs text-muted-foreground">{new Date(ann.created_at).toLocaleDateString()}</span>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={async () => {
-                            if (!confirm("Are you sure you want to delete this broadcast?")) return;
-                            try {
-                              setHistoryLoading(true)
-                              await api.deleteBroadcast({
-                                title: ann.title,
-                                message: ann.message,
-                                type: ann.type
-                              })
-                              alert("Broadcast deleted")
-                              fetchAnnouncements()
-                            } catch (e) {
-                              console.error(e)
-                              alert("Failed to delete")
-                              setHistoryLoading(false)
-                            }
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <Card className="border-white/10 shadow-lg bg-card/50 backdrop-blur-sm">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-muted-foreground" />
+                  <CardTitle>Recent History</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <AnimatePresence>
+                    {historyLoading ? (
+                      <div className="flex justify-center py-6">
+                        <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
                       </div>
-                      <p className="text-sm text-muted-foreground">{ann.message?.split(':')[1] || ann.message}</p>
-                      <p className="text-xs text-muted-foreground mt-2">Sent to: All Students</p>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center">No recent announcements</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                    ) : announcements.length > 0 ? (
+                      announcements.map((ann: any, index) => (
+                        <motion.div
+                          key={ann.id}
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          transition={{ delay: index * 0.05 }}
+                          className="border-b border-white/5 pb-4 last:border-0 last:pb-0 group"
+                        >
+                          <div className="flex items-start justify-between gap-2 mb-1">
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-foreground">{ann.title || "No Title"}</h3>
+                              <span className="text-xs text-muted-foreground">{new Date(ann.created_at).toLocaleDateString()}</span>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10"
+                              onClick={async () => {
+                                if (!confirm("Are you sure you want to delete this broadcast?")) return;
+                                try {
+                                  setHistoryLoading(true)
+                                  await api.deleteBroadcast({
+                                    title: ann.title,
+                                    message: ann.message,
+                                    type: ann.type
+                                  })
+                                  fetchAnnouncements()
+                                } catch (e) {
+                                  console.error(e)
+                                  alert("Failed to delete")
+                                  setHistoryLoading(false)
+                                }
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <p className="text-sm text-muted-foreground bg-secondary/30 p-2 rounded-md border border-white/5">
+                            {ann.message?.replace(/^.*?:/, '').trim() || ann.message}
+                          </p>
+                        </motion.div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center py-6">No announcements sent yet.</p>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
       </main>
     </div>

@@ -217,8 +217,8 @@ export default function SignupPage() {
             <div className="w-full max-w-md space-y-6">
                 {/* Logo */}
                 <Link href="/" className="flex items-center justify-center gap-2">
-                    <BookOpen className="h-8 w-8 text-primary" />
-                    <span className="font-semibold text-xl">Smart Library</span>
+                    <img src="/logo.jpeg" alt="SMART LIB" className="h-10 w-auto rounded" />
+                    <span className="font-semibold text-xl">SMART LIB</span>
                 </Link>
 
                 {/* Signup Card */}

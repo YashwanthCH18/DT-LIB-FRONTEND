@@ -14,6 +14,7 @@ interface User {
 
 interface AuthContextType {
     user: User | null
+    token: string | null
     loading: boolean
     login: (email: string, password: string, expectedRole?: string) => Promise<void>
     signup: (data: {
@@ -174,12 +175,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         try {
             const response = await api.validate()
+            // Always use the name from API response (most up-to-date)
+            const userName = response.name || response.email
+
             setUser({
                 user_id: response.user_id,
                 email: response.email,
-                name: localStorage.getItem('user_name') || response.email,
+                name: userName,
                 role: response.role,
             })
+
+            // Update localStorage with latest name from API
+            localStorage.setItem('user_name', userName)
+            localStorage.setItem('user_role', response.role)
+
             // Ensure login time is set if missing (e.g. page refresh)
             if (!localStorage.getItem('login_time')) {
                 localStorage.setItem('login_time', Date.now().toString())
@@ -190,10 +199,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             localStorage.removeItem('user_role')
             localStorage.removeItem('user_name')
             localStorage.removeItem('login_time')
+            setToken(null)
         } finally {
             setLoading(false)
         }
     }
+
+    const [token, setToken] = useState<string | null>(null)
+
+    useEffect(() => {
+        // Initialize token from local storage
+        if (typeof window !== 'undefined') {
+            setToken(localStorage.getItem('access_token'))
+        }
+    }, [])
 
     const login = async (email: string, password: string, expectedRole?: string) => {
         try {
@@ -207,6 +226,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             localStorage.setItem('user_role', response.role)
             localStorage.setItem('user_name', response.name)
             localStorage.setItem('login_time', Date.now().toString())
+            setToken(response.access_token)
 
             setUser({
                 user_id: response.user_id,
@@ -247,11 +267,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem('user_name')
         localStorage.removeItem('login_time')
         setUser(null)
+        setToken(null)
         router.push('/login')
     }
 
     const value = {
         user,
+        token,
         loading,
         login,
         signup,

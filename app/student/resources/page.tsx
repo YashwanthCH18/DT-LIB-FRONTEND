@@ -4,20 +4,25 @@ import { useState, useEffect } from "react"
 import { StudentNav } from "@/components/student-nav"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Download, FileText, Megaphone } from "lucide-react"
+import { Download, FileText, Megaphone, Search } from "lucide-react"
 import { api } from "@/lib/api"
 
 export default function ResourcesPage() {
   const [subject, setSubject] = useState("all")
   const [semester, setSemester] = useState("all")
+  const [department, setDepartment] = useState("all")
+  const [searchQuery, setSearchQuery] = useState("")
   const [resources, setResources] = useState<any[]>([])
   const [announcements, setAnnouncements] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
+  const departments = ["MCA", "MBA", "BE CS", "BE Mechanical", "BE Civil", "BE ECE", "BE EEE", "Other"]
+
   useEffect(() => {
     fetchResources()
-  }, [subject, semester])
+  }, [subject, semester, department])
 
   useEffect(() => {
     fetchAnnouncements()
@@ -29,6 +34,8 @@ export default function ResourcesPage() {
       const params: Record<string, string> = {}
       if (subject && subject !== "all") params.subject = subject
       if (semester && semester !== "all") params.semester = semester
+      if (department && department !== "all") params.department = department
+      if (searchQuery.trim()) params.title = searchQuery.trim()
 
       const response = await api.getResources(params)
       setResources(response || []) // API returns array directly or inside object, verifying from code response data handling
@@ -53,22 +60,15 @@ export default function ResourcesPage() {
     }
   }
 
-  const handleDownload = async (id: string, fileName: string) => {
-    try {
-      const response = await api.downloadResource(id)
-      if (response.download_url) {
-        // Create a temporary link to download
-        const link = document.createElement('a')
-        link.href = response.download_url
-        link.download = response.filename || fileName || 'download.pdf'
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-      }
-    } catch (error) {
-      console.error("Download failed:", error)
-      alert("Failed to download resource")
-    }
+  const handleDownload = (fileUrl: string, fileName: string) => {
+    // Direct download using the Supabase Storage URL
+    const link = document.createElement('a')
+    link.href = fileUrl
+    link.target = '_blank'
+    link.download = fileName || 'download.pdf'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
   }
 
   return (
@@ -101,7 +101,7 @@ export default function ResourcesPage() {
                   </SelectContent>
                 </Select>
                 <Select value={semester} onValueChange={setSemester}>
-                  <SelectTrigger className="w-full md:w-[250px]">
+                  <SelectTrigger className="w-full md:w-[180px]">
                     <SelectValue placeholder="Select Semester" />
                   </SelectTrigger>
                   <SelectContent>
@@ -116,6 +116,29 @@ export default function ResourcesPage() {
                     <SelectItem value="8">Semester 8</SelectItem>
                   </SelectContent>
                 </Select>
+                <Select value={department} onValueChange={setDepartment}>
+                  <SelectTrigger className="w-full md:w-[180px]">
+                    <SelectValue placeholder="Select Department" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Departments</SelectItem>
+                    {departments.map((dept) => (
+                      <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex gap-4 mt-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by title..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+                <Button onClick={fetchResources}>Search</Button>
               </div>
             </CardContent>
           </Card>
@@ -133,13 +156,13 @@ export default function ResourcesPage() {
                       <div className="flex-1">
                         <CardTitle className="text-lg">{resource.title}</CardTitle>
                         <CardDescription>
-                          {resource.subject} • Semester {resource.semester} • {resource.year}
+                          {resource.subject} • Semester {resource.semester} • {resource.department}
                         </CardDescription>
                       </div>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <Button variant="outline" className="w-full bg-transparent" onClick={() => handleDownload(resource.id, resource.filename)}>
+                    <Button variant="outline" className="w-full bg-transparent" onClick={() => handleDownload(resource.file_url, resource.title + '.pdf')}>
                       <Download className="mr-2 h-4 w-4" />
                       Download PDF
                     </Button>

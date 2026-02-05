@@ -22,13 +22,18 @@ export default function ContentManagementPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [filterSemester, setFilterSemester] = useState("all")
   const [filterSubject, setFilterSubject] = useState("")
+  const [filterDepartment, setFilterDepartment] = useState("all")
+  const [sortBy, setSortBy] = useState("newest")
+
+  // Department options
+  const departments = ["MCA", "MBA", "BE CS", "BE Mechanical", "BE Civil", "BE ECE", "BE EEE", "Other"]
 
   // Upload Form State
   const [formData, setFormData] = useState({
     name: "",
     subject: "",
     semester: "",
-    year: "",
+    department: "",
     file: null as File | null
   })
 
@@ -46,7 +51,7 @@ export default function ContentManagementPage() {
       fetchResources()
     }, 500)
     return () => clearTimeout(timer)
-  }, [searchQuery, filterSemester, filterSubject])
+  }, [searchQuery, filterSemester, filterSubject, filterDepartment, sortBy])
 
   const fetchResources = async () => {
     setLoading(true)
@@ -56,6 +61,8 @@ export default function ContentManagementPage() {
       if (searchQuery) params.title = searchQuery
       if (filterSemester && filterSemester !== "all") params.semester = filterSemester
       if (filterSubject) params.subject = filterSubject
+      if (filterDepartment && filterDepartment !== "all") params.department = filterDepartment
+      if (sortBy) params.sort_by = sortBy
 
       const response = await api.getResources(params)
       // API returns array directly
@@ -76,7 +83,7 @@ export default function ContentManagementPage() {
   }
 
   const handleUpload = async () => {
-    if (!formData.name || !formData.subject || !formData.semester || !formData.year || !formData.file) {
+    if (!formData.name || !formData.subject || !formData.semester || !formData.department || !formData.file) {
       alert("Please fill in all fields and select a file")
       return
     }
@@ -87,8 +94,8 @@ export default function ContentManagementPage() {
       data.append("title", formData.name)
       data.append("subject", formData.subject)
       data.append("semester", formData.semester)
-      data.append("year", formData.year)
-      data.append("type", "paper") // Default to paper for now
+      data.append("department", formData.department)
+      data.append("type", "cie_paper") // Valid: cie_paper, syllabus, notes, other
       data.append("file", formData.file)
 
       await api.uploadResource(data)
@@ -99,7 +106,7 @@ export default function ContentManagementPage() {
         name: "",
         subject: "",
         semester: "",
-        year: "",
+        department: "",
         file: null
       })
       // Clear file input manually if needed (using ref or simple reload)
@@ -182,14 +189,17 @@ export default function ContentManagementPage() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="year">Year</Label>
-                    <Input
-                      id="year"
-                      placeholder="e.g., 2023"
-                      type="number"
-                      value={formData.year}
-                      onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                    />
+                    <Label htmlFor="department">Department</Label>
+                    <Select onValueChange={(val) => setFormData({ ...formData, department: val })} value={formData.department}>
+                      <SelectTrigger id="department">
+                        <SelectValue placeholder="Select department" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {departments.map((dept) => (
+                          <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -226,37 +236,62 @@ export default function ContentManagementPage() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
-                <div className="w-full md:w-[200px]">
-                  <Label htmlFor="filter-semester" className="sr-only">Semester</Label>
-                  <Select value={filterSemester} onValueChange={setFilterSemester}>
-                    <SelectTrigger id="filter-semester">
-                      <SelectValue placeholder="All Semesters" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Semesters</SelectItem>
-                      <SelectItem value="1">Semester 1</SelectItem>
-                      <SelectItem value="2">Semester 2</SelectItem>
-                      <SelectItem value="3">Semester 3</SelectItem>
-                      <SelectItem value="4">Semester 4</SelectItem>
-                      <SelectItem value="5">Semester 5</SelectItem>
-                      <SelectItem value="6">Semester 6</SelectItem>
-                      <SelectItem value="7">Semester 7</SelectItem>
-                      <SelectItem value="8">Semester 8</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="flex gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
+                  <div className="w-[140px] shrink-0">
+                    <Select value={sortBy} onValueChange={setSortBy}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sort By" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="title">Title (A-Z)</SelectItem>
+                        <SelectItem value="title_desc">Title (Z-A)</SelectItem>
+                        <SelectItem value="newest">Newest First</SelectItem>
+                        <SelectItem value="oldest">Oldest First</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="w-[140px] shrink-0">
+                    <Select value={filterSemester} onValueChange={setFilterSemester}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Semester" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Semesters</SelectItem>
+                        <SelectItem value="1">Semester 1</SelectItem>
+                        <SelectItem value="2">Semester 2</SelectItem>
+                        <SelectItem value="3">Semester 3</SelectItem>
+                        <SelectItem value="4">Semester 4</SelectItem>
+                        <SelectItem value="5">Semester 5</SelectItem>
+                        <SelectItem value="6">Semester 6</SelectItem>
+                        <SelectItem value="7">Semester 7</SelectItem>
+                        <SelectItem value="8">Semester 8</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="w-[180px] shrink-0">
+                    <Input
+                      placeholder="Filter Subject..."
+                      value={filterSubject}
+                      onChange={(e) => setFilterSubject(e.target.value)}
+                    />
+                  </div>
+                  <div className="w-[150px] shrink-0">
+                    <Select value={filterDepartment} onValueChange={setFilterDepartment}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Depts" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Departments</SelectItem>
+                        {departments.map((dept) => (
+                          <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button onClick={fetchResources} variant="secondary">
+                    Search
+                  </Button>
                 </div>
-                <div className="w-full md:w-[200px]">
-                  <Label htmlFor="filter-subject" className="sr-only">Branch/Subject</Label>
-                  <Input
-                    id="filter-subject"
-                    placeholder="Filter by Subject/Branch..."
-                    value={filterSubject}
-                    onChange={(e) => setFilterSubject(e.target.value)}
-                  />
-                </div>
-                <Button onClick={fetchResources} variant="secondary">
-                  Search
-                </Button>
               </div>
 
               {loading ? (
@@ -268,6 +303,7 @@ export default function ContentManagementPage() {
                       <TableHead>Resource Name</TableHead>
                       <TableHead>Subject</TableHead>
                       <TableHead>Semester</TableHead>
+                      <TableHead>Department</TableHead>
                       <TableHead>Upload Date</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
@@ -278,12 +314,13 @@ export default function ContentManagementPage() {
                         <TableRow key={file.id}>
                           <TableCell className="flex items-center gap-2">
                             <FileText className="h-4 w-4 text-primary" />
-                            <a href={`/api/resources/${file.id}/download`} target="_blank" rel="noreferrer" className="font-medium hover:underline">
+                            <a href={file.file_url} target="_blank" rel="noreferrer" className="font-medium hover:underline">
                               {file.title}
                             </a>
                           </TableCell>
                           <TableCell>{file.subject}</TableCell>
                           <TableCell>{file.semester}</TableCell>
+                          <TableCell>{file.department}</TableCell>
                           <TableCell>{new Date(file.created_at).toLocaleDateString()}</TableCell>
                           <TableCell>
                             <Button
@@ -308,7 +345,7 @@ export default function ContentManagementPage() {
             </CardContent>
           </Card>
         </div>
-      </main>
-    </div>
+      </main >
+    </div >
   )
 }

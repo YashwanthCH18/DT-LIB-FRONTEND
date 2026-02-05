@@ -5,7 +5,7 @@ import { AdminNav } from "@/components/admin-nav"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { User, Mail, BookOpen, AlertTriangle, DollarSign } from "lucide-react"
+import { User, Mail, BookOpen, AlertTriangle, IndianRupee } from "lucide-react"
 import { api } from "@/lib/api"
 import { useParams } from "next/navigation"
 
@@ -186,7 +186,7 @@ export default function StudentDetailPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Fines</CardTitle>
-                <DollarSign className="h-4 w-4 text-chart-2" />
+                <IndianRupee className="h-4 w-4 text-chart-2" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">₹{totalFines}</div>

@@ -166,6 +166,12 @@ class APIClient {
         return this.request(`/api/admin/logs${queryString}`)
     }
 
+    // Get IoT borrow logs (real-time data from RFID scanners)
+    async getIotLogs(params?: Record<string, string>) {
+        const queryString = params ? '?' + new URLSearchParams(params).toString() : ''
+        return this.request(`/api/admin/iot-logs${queryString}`)
+    }
+
     async getAllBooks() {
         return this.request('/api/admin/books')
     }
@@ -188,8 +194,19 @@ class APIClient {
         return this.request(`/api/admin/books/${bookId}`, { method: 'DELETE' })
     }
 
-    async getAllStudents() {
-        return this.request('/api/admin/students')
+    async getBookBorrowers(bookId: string) {
+        return this.request(`/api/admin/books/${bookId}/borrowers`)
+    }
+
+    async fetchAllStudents(token: string, search?: string, hasOverdue?: boolean, hasFines?: boolean, sortBy?: string) {
+        const params = new URLSearchParams()
+        if (search) params.append('search', search)
+        if (hasOverdue) params.append('has_overdue', 'true')
+        if (hasFines) params.append('has_fines', 'true')
+        if (sortBy) params.append('sort_by', sortBy)
+
+        const queryString = params.toString() ? `?${params.toString()}` : ''
+        return this.request(`/api/admin/students${queryString}`)
     }
 
     async getStudentDetails(studentId: string) {
@@ -234,6 +251,27 @@ class APIClient {
         })
     }
 
+    async fetchAllBooks(token: string, query?: string, availability?: "available" | "unavailable", category?: string, sortBy?: string) {
+        const params = new URLSearchParams()
+        if (query) params.append("query", query)
+        if (availability) params.append("availability", availability)
+        if (category) params.append("category", category)
+        if (sortBy) params.append("sort_by", sortBy)
+
+        const response = await fetch(`${this.baseURL}/api/admin/books?${params.toString()}`, {
+            headers: { Authorization: `Bearer ${token}` },
+        })
+        if (!response.ok) {
+            const text = await response.text()
+            try {
+                const error = JSON.parse(text)
+                throw new Error(error.detail || 'Request failed')
+            } catch {
+                throw new Error(text)
+            }
+        }
+        return response.json()
+    }
     async deleteBroadcast(data: { title: string; message: string; type: string }) {
         const params = new URLSearchParams(data).toString()
         return this.request(`/api/admin/notifications/broadcast?${params}`, {
@@ -277,6 +315,32 @@ class APIClient {
                 error = { detail: text }
             }
             throw new Error(error.detail || error.message || 'Upload failed')
+        }
+
+        return response.json()
+    }
+
+    async bulkImportBooks(formData: FormData) {
+        const token = getToken()
+        console.log(`[API] Uploading to: ${this.baseURL}/api/admin/books/bulk-import`)
+        const response = await fetch(`${this.baseURL}/api/admin/books/bulk-import`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: formData
+        })
+
+        if (!response.ok) {
+            const text = await response.text()
+            console.error('[API] Error Response Body:', text)
+            let error
+            try {
+                error = JSON.parse(text)
+            } catch {
+                error = { detail: text }
+            }
+            throw new Error(error.detail || error.message || 'Import failed')
         }
 
         return response.json()

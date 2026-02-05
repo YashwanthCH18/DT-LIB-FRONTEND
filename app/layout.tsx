@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Smart Library Management System",
+  title: "SMART LIB Management System",
   description: "RFID-based library management with automated reminders",
 };
 

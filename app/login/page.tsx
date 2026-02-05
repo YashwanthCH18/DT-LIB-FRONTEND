@@ -67,14 +67,16 @@ export default function LoginPage() {
       <div className="w-full max-w-md space-y-6">
         {/* Logo */}
         <Link href="/" className="flex items-center justify-center gap-2">
-          <BookOpen className="h-8 w-8 text-primary" />
-          <span className="font-semibold text-xl">Smart Library</span>
+          <img src="/logo.jpeg" alt="SMART LIB" className="h-14 w-auto rounded" />
         </Link>
+        <CardTitle className="text-2xl font-bold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent text-center">
+          SMART LIB
+        </CardTitle>
 
         {/* Login Card */}
         <Card>
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl">Welcome back</CardTitle>
+            <CardTitle className="text-2xl">Log in</CardTitle>
             <CardDescription>Enter your credentials to access your account</CardDescription>
           </CardHeader>
           <CardContent>

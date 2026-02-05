@@ -63,10 +63,10 @@ export default function StudentDetailPage() {
   if (loading) return <div>Loading...</div>
   if (!studentData) return <div>Student not found</div>
 
-  const { student, active_borrows, history } = studentData
+  const { student, active_borrows, history, overdue_count, total_fines } = studentData
   const activeCount = active_borrows?.length || 0
-  const overdueCount = active_borrows?.filter((b: any) => new Date(b.due_date) < new Date()).length || 0
-  const totalFines = 0
+  const overdueCount = overdue_count || 0
+  const totalFines = total_fines || 0
 
   const borrowHistory = history || []
 

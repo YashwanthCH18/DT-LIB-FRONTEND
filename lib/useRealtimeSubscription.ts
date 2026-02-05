@@ -43,13 +43,13 @@ export function useRealtimeSubscription({
     const channel = supabase
       .channel(channelName)
       .on(
-        "postgres_changes",
+        "postgres_changes" as any,
         {
           event,
           schema,
           table,
         },
-        (payload) => {
+        (payload: any) => {
           console.log(`[Realtime] ${table} event:`, payload.eventType, payload)
           onEvent(payload)
         }
@@ -81,19 +81,19 @@ export function useMultiTableRealtime(
 
   useEffect(() => {
     const channelName = `realtime-multi-${Date.now()}`
-    
+
     let channel = supabase.channel(channelName)
 
     // Add subscription for each table
     tables.forEach((table) => {
       channel = channel.on(
-        "postgres_changes",
+        "postgres_changes" as any,
         {
           event: "*",
           schema: "public",
           table,
         },
-        (payload) => {
+        (payload: any) => {
           console.log(`[Realtime] ${table} event:`, payload.eventType)
           onEvent(table, payload)
         }

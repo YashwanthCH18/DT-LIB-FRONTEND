@@ -162,7 +162,7 @@ export default function SearchBooksPage() {
                               <div className="bg-secondary/50 rounded px-2 py-1 truncate">{book.category || "N/A"}</div>
                             </div>
                             <Link href={`/student/search/${book.id}`} className="mt-auto">
-                              <Button className="w-full bg-secondary/80 hover:bg-primary hover:text-white transition-all group-hover:shadow-lg">
+                              <Button className="w-full bg-primary text-white hover:bg-primary/90 transition-all group-hover:shadow-lg">
                                 View Details <ArrowRight className="ml-2 h-4 w-4" />
                               </Button>
                             </Link>
